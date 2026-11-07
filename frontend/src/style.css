@@ -73,3 +73,23 @@
 .novel-file-field input{padding:6px 0;border:0;background:transparent;font-size:10px;color:#bbb}
 .novel-file-field input::file-selector-button{background:#333;border:1px solid #666;color:#eee;padding:6px 9px;margin-right:9px;font:9px 'DM Sans',sans-serif;cursor:pointer}
 .novel-file-field small{font-size:9px;letter-spacing:0;color:#999}
+
+.reader-view{background:#101010;color:#eee;padding:0;gap:0}
+.reader-view>header{height:54px;flex:none;border-bottom:1px solid #333;padding:0 22px;color:#bbb;letter-spacing:.7px;font-size:10px}
+.reader-view>header strong{font:18px 'DM Serif Display',serif;color:#eee;letter-spacing:0}
+.reader-view>header span{font-size:8px;letter-spacing:1px}
+.reader-toc{height:42px;flex:none;display:flex;align-items:center;justify-content:center;gap:10px;border-bottom:1px solid #292929;color:#999;font-size:8px;letter-spacing:1px}
+.reader-toc select{max-width:min(420px,70vw);background:#1b1b1b;color:#ddd;border:1px solid #444;padding:6px 9px;font-size:10px}
+.reader-toc option{background:#1b1b1b;color:#eee}
+.reader-stage{position:relative;flex:1;min-height:0;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:24px}
+.pdf-stage{background:#171717}
+.pdf-page{display:block;max-width:100%;height:auto;box-shadow:0 5px 30px #0009;background:#fff}
+.epub-stage{background:#f1eee7;padding:0}
+.epub-book-host{width:min(1050px,100%);height:100%;min-height:300px;background:#f7f4ec;color:#242424}
+.epub-book-host iframe{background:#f7f4ec}
+.reader-loading,.reader-error{align-self:center;color:#aaa;font-size:11px;letter-spacing:1px}
+.reader-error{color:#e6aaaa;text-align:center;padding:30px}
+.reader-view>footer{height:58px;flex:none;border-top:1px solid #333;background:#101010;color:#bbb}
+.reader-view>footer button{border:1px solid #555;padding:8px 12px;color:#ddd}
+.reader-view>footer button:disabled{opacity:.25}
+@media(max-width:650px){.reader-view>header{padding:0 10px}.reader-view>header strong{font-size:14px}.reader-stage{padding:10px}.epub-stage{padding:0}.reader-view>footer{gap:5px;padding:8px}.reader-view>footer button{font-size:8px;padding:7px}}
