@@ -11,7 +11,7 @@ COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/app.py ./app.py
 COPY --from=web /web/dist /frontend
-RUN useradd --create-home --uid 10001 nightread && mkdir -p /data/Books /appdata && chown -R nightread:nightread /data /appdata
+RUN useradd --create-home --uid 1000 nightread && mkdir -p /data/Books /appdata && chown -R nightread:nightread /data /appdata
 USER nightread
 EXPOSE 8080
 CMD ["uvicorn","app:app","--host","0.0.0.0","--port","8080"]
