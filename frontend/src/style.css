@@ -157,7 +157,7 @@ body{background:#000}
 .gallery-caption h1{font:500 20px 'Atkinson Hyperlegible';margin:0 0 5px;color:#f4f4f4}
 .gallery-caption p{font:11px 'Atkinson Hyperlegible';color:#c4c4c4;margin:0 0 5px}
 .gallery-caption>span{font:8px 'Atkinson Hyperlegible';color:#aaa;letter-spacing:.8px}
-.gallery-caption button{position:absolute;opacity:0;pointer-events:none}
+.gallery-caption button{display:flex;align-items:center;gap:6px;margin-top:9px;border:0;border-bottom:1px solid #888;background:transparent;color:#eee;padding:3px 0;font:9px 'Atkinson Hyperlegible';letter-spacing:.8px;opacity:1;pointer-events:auto}
 .gallery-empty{height:clamp(330px,48vh,520px);background:#222;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px}
 .empty-gallery-row{height:200px;display:flex;align-items:center;justify-content:center;gap:12px}
 .empty-gallery-row i{display:block;width:32px;height:140px;background:linear-gradient(90deg,#161616,#777,#292929);border:1px solid #777;box-shadow:5px 8px 13px #0009}
