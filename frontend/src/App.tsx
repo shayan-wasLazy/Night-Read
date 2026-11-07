@@ -94,7 +94,7 @@ export default function App() {
         <h1>{active?.title}</h1>
         <p>{active?.author}</p>
         <span>{active?.format.toUpperCase()} · {active?.progress || 0}% READ</span>
-        <button onClick={() => active && setReader(active)}>OPEN BOOK <ArrowRight size={14}/></button>
+        <button onClick={() => active && setReader(active)}>OPEN <ArrowRight size={13}/></button>
       </section>
     </> : <section className="gallery-empty">
       <div className="empty-gallery-row"><i/><i/><b>BOOK</b><i/><i/></div>
