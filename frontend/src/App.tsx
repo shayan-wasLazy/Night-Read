@@ -1,146 +1,43 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { ArrowLeft, ArrowRight, BookOpen, Bookmark, ChevronLeft, ChevronRight, Library, Moon, Search, Sun, Upload, X } from 'lucide-react';
-
-type Book = { id: number; title: string; author: string; format: string; filename: string; progress: number; created_at: string };
-const API = '/api';
-const palette = ['#5a2928', '#343b50', '#765039', '#43364a', '#6b3435', '#394052', '#66513d', '#493b38'];
-
-function bookColor(index: number) { return palette[index % palette.length]; }
-function splitIntoPages(value: string, chars = 1450) {
-  const words = value.split(/\s+/);
-  const pages: string[] = [];
-  let page = '';
-  for (const word of words) {
-    if ((page + ' ' + word).length > chars && page) { pages.push(page); page = word; }
-    else page += (page ? ' ' : '') + word;
-  }
-  if (page) pages.push(page);
-  return pages.length ? pages : [''];
+import {useCallback,useEffect,useMemo,useRef,useState,type FormEvent,type WheelEvent} from 'react';
+import {ArrowLeft,ArrowRight,Plus,Search,X,Pencil,Trash2,Upload,BookOpen} from 'lucide-react';
+type Status='Want to Read'|'Reading'|'Completed'|'On Hold';
+type Book={id:number;title:string;author:string;original_title?:string|null;publication_year:number|null;genre?:string|null;series?:string|null;volume?:string|null;publisher?:string|null;description?:string|null;isbn?:string|null;cover_url?:string|null;reading_status:Status;rating?:number|null;notes?:string|null;filename:string;format:string;progress:number;created_at:string;decade?:number|null};
+const API='/api',STATUSES:Status[]=['Want to Read','Reading','Completed','On Hold'],SHADES=['#555','#686868','#454545','#777','#505050','#626262','#3d3d3d','#707070'];
+const blank={title:'',author:'',original_title:'',publication_year:String(new Date().getFullYear()),genre:'',series:'',volume:'',publisher:'',description:'',isbn:'',reading_status:'Want to Read' as Status,rating:'',notes:''};
+export default function App(){
+ const [books,setBooks]=useState<Book[]>([]),[selectedId,setSelectedId]=useState<number|null>(null),[decade,setDecade]=useState<number|null>(null),[query,setQuery]=useState(''),[sort,setSort]=useState('year'),[order,setOrder]=useState<'asc'|'desc'>('asc'),[modal,setModal]=useState(false),[editing,setEditing]=useState<Book|null>(null),[form,setForm]=useState({...blank}),[cover,setCover]=useState<File|null>(null),[preview,setPreview]=useState(''),[saving,setSaving]=useState(false),[error,setError]=useState(''),[reader,setReader]=useState<Book|null>(null);
+ const track=useRef<HTMLDivElement>(null),coverInput=useRef<HTMLInputElement>(null);
+ const load=useCallback(async()=>{const r=await fetch(API+'/books?limit=2000&sort='+sort+'&order='+order);if(!r.ok)throw Error('Unable to load archive');const d=await r.json();setBooks(d.items||[]);},[sort,order]);
+ useEffect(()=>{load().catch(()=>setError('Cannot connect to NightRead.'));},[load]);
+ const decades=useMemo(()=>Array.from(new Set(books.map(b=>b.publication_year?Math.floor(b.publication_year/10)*10:null).filter((v):v is number=>v!==null))).sort((a,b)=>a-b),[books]);
+ const visible=useMemo(()=>books.filter(b=>(decade===null||(b.publication_year!==null&&Math.floor(b.publication_year/10)*10===decade))&&(!query||[b.title,b.author,b.original_title,b.series].some(v=>v?.toLowerCase().includes(query.toLowerCase())))),[books,decade,query]);
+ const active=visible.find(b=>b.id===selectedId)||visible[0]||null;
+ useEffect(()=>{if(active&&active.id!==selectedId)setSelectedId(active.id);},[active?.id]);
+ useEffect(()=>{if(active){track.current?.querySelector('[data-id="'+active.id+'"]')?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});}},[active?.id]);
+ const move=(n:number)=>{if(!visible.length)return;const i=visible.findIndex(b=>b.id===active?.id);setSelectedId(visible[Math.max(0,Math.min(visible.length-1,i+n))].id);};
+ useEffect(()=>{const fn=(e:KeyboardEvent)=>{if(modal||reader)return;if(e.key==='ArrowLeft'){e.preventDefault();move(-1);}if(e.key==='ArrowRight'){e.preventDefault();move(1);}};window.addEventListener('keydown',fn);return()=>window.removeEventListener('keydown',fn);},[visible,active?.id,modal,reader]);
+ const onWheel=(e:WheelEvent<HTMLDivElement>)=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX))e.currentTarget.scrollLeft+=e.deltaY;};
+ const add=()=>{setEditing(null);setForm({...blank});setCover(null);setPreview('');setError('');setModal(true);};
+ const edit=(b:Book)=>{setEditing(b);setForm({title:b.title,author:b.author,original_title:b.original_title||'',publication_year:String(b.publication_year||''),genre:b.genre||'',series:b.series||'',volume:b.volume||'',publisher:b.publisher||'',description:b.description||'',isbn:b.isbn||'',reading_status:b.reading_status,rating:b.rating==null?'':String(b.rating),notes:b.notes||''});setCover(null);setPreview(b.cover_url?API+b.cover_url:'');setError('');setModal(true);};
+ const field=(k:string,v:string)=>setForm(f=>({...f,[k]:v}));
+ const submit=async(e:FormEvent)=>{e.preventDefault();setError('');const y=Number(form.publication_year);if(!form.title.trim()||!form.author.trim()||!Number.isInteger(y)||y<1||y>new Date().getFullYear()+5){setError('Enter a title, author and valid publication year.');return;}if(!editing&&!cover){setError('A cover image is required.');return;}const data=new FormData();Object.entries(form).forEach(([k,v])=>data.append(k,v));if(cover)data.append('cover',cover);setSaving(true);try{const r=await fetch(API+'/books'+(editing?'/'+editing.id:''),{method:editing?'PUT':'POST',body:data}),d=await r.json();if(!r.ok)throw Error(d.detail||'Save failed');await load();setSelectedId(d.id);setDecade(null);setQuery('');setModal(false);}catch(e){setError(e instanceof Error?e.message:'Save failed');}finally{setSaving(false);}};
+ const remove=async(b:Book)=>{if(!confirm('Delete '+b.title+' and its cover?'))return;const r=await fetch(API+'/books/'+b.id,{method:'DELETE'});if(r.ok){await load();setSelectedId(null);}else setError('Delete failed.');};
+ const status=async(v:Status)=>{if(!active)return;await fetch(API+'/books/'+active.id+'/status',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({reading_status:v})});await load();};
+ const years=books.map(b=>b.publication_year).filter((v):v is number=>!!v),range=years.length?Math.min(...years)+' — '+Math.max(...years):'';
+ return <main className="archive-shell"><section className="archive-panel">
+  <header className="archive-header"><button className="archive-back" onClick={()=>{setDecade(null);setQuery('');}}>← <span>BACK / LIBRARY</span></button><div className="archive-heading">BOOK ARCHIVE</div><div className="archive-header-right"><span>{range}</span><button className="add-icon" onClick={add} aria-label="Add book"><Plus size={18}/></button></div></header>
+  <nav className="decade-bar"><button className={decade===null?'active':''} onClick={()=>setDecade(null)}>ALL / すべて</button>{decades.map(d=><button key={d} className={decade===d?'active':''} onClick={()=>setDecade(d)}>{d}s</button>)}<label className="archive-search"><Search size={12}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="SEARCH"/></label></nav>
+  <section className="archive-gallery">{visible.length?<><button className="gallery-nav" onClick={()=>move(-1)} disabled={visible[0]?.id===active?.id}><ArrowLeft size={14}/></button><div className="gallery-track" ref={track} onWheel={onWheel}>{visible.map((b,i)=><button key={b.id} data-id={b.id} className={'archive-book '+(active?.id===b.id?'selected':'')} onClick={()=>setSelectedId(b.id)} title={b.title}>{b.cover_url?<img loading="lazy" src={API+b.cover_url} alt={b.title}/>:<span className="generated-cover" style={{background:SHADES[i%SHADES.length]}}><b>{b.title}</b><small>{b.author}</small></span>}</button>)}</div><button className="gallery-nav" onClick={()=>move(1)} disabled={visible[visible.length-1]?.id===active?.id}><ArrowRight size={14}/></button></>:<div className="archive-empty"><span>NO BOOKS IN THIS COLLECTION</span><button onClick={add}><Plus size={13}/> ADD BOOK</button></div>}</section>
+  {active&&<footer className="archive-details"><div className="details-arrows"><button onClick={()=>move(-1)} disabled={visible[0]?.id===active.id}><ArrowLeft size={13}/></button><button onClick={()=>move(1)} disabled={visible[visible.length-1]?.id===active.id}><ArrowRight size={13}/></button></div><div className="book-information"><h1>{active.title}</h1>{active.original_title&&<div className="original-title">{active.original_title}</div>}<p>{active.author}{active.publication_year?' · '+active.publication_year:''}{active.series?' · '+active.series:''}{active.volume?' · Vol. '+active.volume:''}</p><div className="book-actions"><select value={active.reading_status} onChange={e=>status(e.target.value as Status)}>{STATUSES.map(s=><option key={s}>{s}</option>)}</select><button onClick={()=>edit(active)}><Pencil size={12}/> EDIT</button><button onClick={()=>remove(active)}><Trash2 size={12}/> DELETE</button>{active.format!=='book'&&<button onClick={()=>setReader(active)}><BookOpen size={12}/> READ</button>}</div></div><div className="collection-index">{String(visible.findIndex(b=>b.id===active.id)+1).padStart(2,'0')} / {String(visible.length).padStart(2,'0')}</div></footer>}
+  <div className="archive-bottom"><span>{books.length} BOOKS</span><div className="sort-control"><label>SORT</label><select value={sort} onChange={e=>setSort(e.target.value)}><option value="year">YEAR</option><option value="title">TITLE</option><option value="created">ADDED</option></select><button onClick={()=>setOrder(v=>v==='asc'?'desc':'asc')}>{order==='asc'?'↑':'↓'}</button></div><span>{visible.length} SHOWN</span></div>
+ </section>
+ {modal&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setModal(false);}}><form className="book-modal" onSubmit={submit}><header><h2>{editing?'EDIT BOOK':'ADD BOOK'}</h2><button type="button" onClick={()=>setModal(false)}><X size={17}/></button></header><div className="modal-body"><button type="button" className="cover-picker" onClick={()=>coverInput.current?.click()}>{preview?<img src={preview} alt="Cover preview"/>:<span><Upload size={19}/> COVER IMAGE *</span>}<input ref={coverInput} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>{const f=e.target.files?.[0];if(f){setCover(f);setPreview(URL.createObjectURL(f));}}}/></button><div className="form-fields">
+  <label>TITLE *<input required value={form.title} onChange={e=>field('title',e.target.value)}/></label><label>AUTHOR *<input required value={form.author} onChange={e=>field('author',e.target.value)}/></label>
+  <div className="form-row"><label>YEAR *<input required type="number" min="1" max={new Date().getFullYear()+5} value={form.publication_year} onChange={e=>field('publication_year',e.target.value)}/></label><label>ORIGINAL TITLE<input value={form.original_title} onChange={e=>field('original_title',e.target.value)}/></label></div>
+  <div className="form-row"><label>GENRE<input value={form.genre} onChange={e=>field('genre',e.target.value)}/></label><label>SERIES<input value={form.series} onChange={e=>field('series',e.target.value)}/></label></div><div className="form-row"><label>VOLUME<input value={form.volume} onChange={e=>field('volume',e.target.value)}/></label><label>PUBLISHER<input value={form.publisher} onChange={e=>field('publisher',e.target.value)}/></label></div>
+  <div className="form-row"><label>ISBN<input value={form.isbn} onChange={e=>field('isbn',e.target.value)}/></label><label>STATUS<select value={form.reading_status} onChange={e=>field('reading_status',e.target.value)}>{STATUSES.map(s=><option key={s}>{s}</option>)}</select></label></div><label>RATING / 5<input type="number" min="0" max="5" step=".5" value={form.rating} onChange={e=>field('rating',e.target.value)}/></label><label>DESCRIPTION<textarea rows={2} value={form.description} onChange={e=>field('description',e.target.value)}/></label><label>PERSONAL NOTES<textarea rows={2} value={form.notes} onChange={e=>field('notes',e.target.value)}/></label>
+ </div></div>{error&&<p className="form-error">{error}</p>}<footer><button type="button" onClick={()=>setModal(false)}>CANCEL</button><button type="submit" disabled={saving||(!editing&&!cover)}>{saving?'SAVING…':editing?'SAVE CHANGES':'ADD TO ARCHIVE'}</button></footer></form></div>}
+ {reader&&<Reader book={reader} onClose={()=>setReader(null)} onProgress={p=>setBooks(old=>old.map(b=>b.id===reader.id?{...b,progress:p}:b))}/>}
+ </main>;
 }
-
-export default function App() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [selected, setSelected] = useState(0);
-  const [query, setQuery] = useState('');
-  const [reader, setReader] = useState<Book | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [toast, setToast] = useState('');
-  const input = useRef<HTMLInputElement>(null);
-
-  const load = async () => {
-    try {
-      const response = await fetch(API + '/books');
-      if (response.ok) {
-        const data: Book[] = await response.json();
-        setBooks(data);
-        setSelected(current => Math.min(current, Math.max(0, data.length - 1)));
-      }
-    } catch { /* server may be offline */ }
-  };
-  useEffect(() => { load(); }, []);
-
-  const filtered = useMemo(() => books.filter(book => (book.title + ' ' + book.author).toLowerCase().includes(query.toLowerCase())), [books, query]);
-  const active = filtered[selected] || filtered[0];
-  const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2800); };
-
-  const upload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    if (!files.length) return;
-    setUploading(true);
-    let added = 0;
-    for (const file of files) {
-      const form = new FormData();
-      form.append('file', file);
-      try { const response = await fetch(API + '/books', { method: 'POST', body: form }); if (response.ok) added++; } catch { /* handled below */ }
-    }
-    await load();
-    setUploading(false);
-    notify(added ? `Added ${added} book${added === 1 ? '' : 's'} to your shelf.` : 'Upload failed. Check your connection to NightRead.');
-    event.target.value = '';
-  };
-
-  const move = (direction: number) => setSelected(current => Math.max(0, Math.min(filtered.length - 1, current + direction)));
-
-  return <main className="library-screen">
-    <header className="archive-header">
-      <button className="archive-back" onClick={() => { setReader(null); setQuery(''); }}>← <span>BACK / LIBRARY</span></button>
-      <div className="archive-heading">NIGHTREAD <small>PERSONAL LIBRARY</small></div>
-      <div className="archive-count">{String(books.length).padStart(2,'0')} BOOKS</div>
-    </header>
-
-    <section className="archive-filterbar">
-      <button className="filter-active">ALL</button>
-      <button onClick={() => setSelected(0)}>RECENT</button>
-      <button onClick={() => setQuery('')}>CLEAR SEARCH</button>
-      <label className="archive-search"><Search size={13}/><input value={query} onChange={event => { setQuery(event.target.value); setSelected(0); }} placeholder="SEARCH"/></label>
-      <button className="archive-add" onClick={() => input.current?.click()}><Upload size={13}/> {uploading ? 'ADDING' : 'ADD BOOK'}</button>
-      <input ref={input} type="file" accept=".epub,.pdf,.txt" multiple hidden onChange={upload}/>
-    </section>
-
-    {filtered.length ? <>
-      <section className="gallery-stage" aria-label="Book collection">
-        <button className="gallery-arrow" onClick={() => move(-1)} disabled={selected <= 0} aria-label="Previous book"><ArrowLeft size={16}/></button>
-        <div className="gallery-track">
-          {filtered.map((book, index) => <button key={book.id} className={'gallery-book ' + (index === selected ? 'gallery-book-active' : '')} style={{ '--book-color': '#'+['555555','777777','414141','686868','4b4b4b','858585','363636','626262'][index%8] } as CSSProperties} onClick={() => setSelected(index)} title={book.title}>
-            <span className="gallery-cover">
-              <span className="gallery-cover-title">{book.title}</span>
-              <span className="gallery-cover-author">{book.author}</span>
-            </span>
-          </button>)}
-        </div>
-        <button className="gallery-arrow" onClick={() => move(1)} disabled={selected >= filtered.length - 1} aria-label="Next book"><ArrowRight size={16}/></button>
-      </section>
-      <section className="gallery-caption">
-        <h1>{active?.title}</h1>
-        <p>{active?.author}</p>
-        <span>{active?.format.toUpperCase()} · {active?.progress || 0}% READ</span>
-        <button onClick={() => active && setReader(active)}>OPEN <ArrowRight size={13}/></button>
-      </section>
-    </> : <section className="gallery-empty">
-      <div className="empty-gallery-row"><i/><i/><b>BOOK</b><i/><i/></div>
-      <button className="empty-add" onClick={() => input.current?.click()}><Upload size={14}/> ADD YOUR FIRST BOOK</button>
-    </section>}
-
-    {reader && <Reader book={reader} onClose={() => { setReader(null); load(); }} onProgress={progress => setBooks(old => old.map(book => book.id === reader.id ? { ...book, progress } : book))}/>}
-    {toast && <div className="toast">{toast}</div>}
-  </main>;
-}
-
-function Reader({ book, onClose, onProgress }: { book: Book; onClose: () => void; onProgress: (progress: number) => void }) {
-  const [content, setContent] = useState('Loading your book…');
-  const [page, setPage] = useState(0);
-  const [night, setNight] = useState(false);
-  const [fontSize, setFontSize] = useState(17);
-  const pages = useMemo(() => splitIntoPages(content), [content]);
-  const isText = book.format.toLowerCase() === 'txt' || book.filename.toLowerCase().endsWith('.txt');
-
-  useEffect(() => {
-    if (!isText) { setContent('This file is stored on your NightRead server. The dedicated EPUB/PDF page renderer is being added; use the original file link below in the meantime.'); return; }
-    fetch(API + '/books/' + book.id + '/content').then(response => response.text()).then(setContent).catch(() => setContent('Unable to load this book. Please check your connection.'));
-  }, [book.id, isText]);
-
-  const saveProgress = () => {
-    const progress = Math.min(100, Math.round(((page + 1) / Math.max(pages.length, 1)) * 100));
-    fetch(API + '/' + 'books/' + book.id + '/progress', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ progress }) });
-    onProgress(progress);
-  };
-
-  return <div className={'reader-view ' + (night ? 'reader-night' : '')}>
-    <aside className="reader-sidebar">
-      <div className="reader-brand">N<span>.</span></div>
-      <div className="reader-user"><div className="reader-avatar">S</div><small>NOW READING</small><b>{book.title}</b></div>
-      <div className="reader-side-links"><span><Library size={15}/> My shelf</span><span><Bookmark size={15}/> Bookmarks</span></div>
-      <div className="reader-side-bottom"><span>PRIVATE READING ROOM</span><span>SYNCED TO HOME SERVER</span></div>
-    </aside>
-    <section className="reading-area">
-      <header className="reading-header"><button className="back-to-shelf" onClick={onClose}><ChevronLeft size={17}/> BACK TO SHELF</button><div className="reading-breadcrumb">{book.title} <span>\</span> {isText ? 'Reading' : book.format.toUpperCase()}</div><div className="reading-controls"><button onClick={() => setFontSize(size => Math.max(14, size - 1))}>A−</button><button onClick={() => setFontSize(size => Math.min(24, size + 1))}>A+</button><button onClick={() => setNight(value => !value)} aria-label="Toggle reading theme">{night ? <Sun size={16}/> : <Moon size={16}/>}</button></div></header>
-      <div className="paper-wrap"><article className="reading-paper" style={{ fontSize: fontSize + 'px' }}>
-        <div className="paper-page-number">{page + 1}</div>
-        <div className="paper-columns">{isText ? <p>{pages[page]}</p> : <div className="format-notice"><BookOpen size={23}/><h2>Your book is safe on the shelf.</h2><p>{content}</p><a href={API + '/books/' + book.id + '/download'} target="_blank" rel="noreferrer">OPEN ORIGINAL FILE <ArrowRight size={14}/></a></div>}</div>
-      </article></div>
-      <div className="page-strip"><button onClick={() => setPage(value => Math.max(0, value - 1))} disabled={page === 0}><ChevronLeft size={17}/></button><div className="page-thumbnails">{(isText ? pages : ['Original file']).map((_, index) => <button key={index} className={page === index ? 'page-thumb active-thumb' : 'page-thumb'} onClick={() => setPage(index)}><span>{index + 1}</span></button>)}</div><button onClick={() => setPage(value => Math.min(pages.length - 1, value + 1))} disabled={!isText || page >= pages.length - 1}><ChevronRight size={17}/></button></div>
-      <div className="reader-bottom"><span>{book.title}</span><span>PAGE {page + 1} OF {isText ? pages.length : '—'}</span><button onClick={saveProgress}>SAVE READING POSITION <ArrowRight size={13}/></button></div>
-    </section>
-    <button className="close-reader" onClick={onClose} aria-label="Close reader"><X size={18}/></button>
-  </div>;
-}
+function Reader({book,onClose,onProgress}:{book:Book;onClose:()=>void;onProgress:(n:number)=>void}){const [content,setContent]=useState('Loading…'),[page,setPage]=useState(0);const pages=useMemo(()=>{const words=content.split(/\\s+/),out:string[]=[];let p='';for(const w of words){if((p+' '+w).length>1450&&p){out.push(p);p=w;}else p+=(p?' ':'')+w;}if(p)out.push(p);return out.length?out:[''];},[content]);useEffect(()=>{fetch(API+'/books/'+book.id+'/content').then(r=>r.text()).then(setContent).catch(()=>setContent('Unable to load file'));},[book.id]);const save=()=>{const p=Math.round((page+1)/pages.length*100);fetch(API+'/books/'+book.id+'/progress',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({progress:p})});onProgress(p);};return <div className="reader-view"><header><button onClick={onClose}>← BACK</button><span>{book.title}</span></header><article>{pages[page]}</article><footer><button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={!page}>PREVIOUS</button><span>{page+1} / {pages.length}</span><button onClick={()=>setPage(p=>Math.min(pages.length-1,p+1))}>NEXT</button><button onClick={save}>SAVE POSITION</button></footer></div>;}
