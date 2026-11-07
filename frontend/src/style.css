@@ -59,3 +59,63 @@
 .reader-night .reader-sidebar{background:#dedbd4}
 @media(max-width:850px){.spine-stage{margin-top:20px}.spine-track{justify-content:flex-start}}
 @media(max-width:600px){.archive-filters{margin-top:30px;gap:5px}.archive-filters span{font-size:7px;padding:5px 7px}.spine-stage{margin-top:14px;min-height:245px}.spine-track{height:245px;gap:9px}.spine-card{height:158px;flex-basis:43px}.spine-card.spine-active{height:205px;flex-basis:128px;padding:0}.cover-face{padding:17px 10px 12px}.cover-art-mark{font-size:32px;margin:13px 0 8px}.cover-face strong{font-size:16px}.cover-face small{font-size:7px}.empty-archive-visual{transform:scale(.88);margin-top:-10px;margin-bottom:4px}.empty-shelf{margin:34px auto 40px}}
+
+/* Minimal monochrome interface */
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+:root{font-family:'Atkinson Hyperlegible','Source Sans 3',sans-serif}
+.library-screen{background:#050505;color:#f5f5f5}
+.library-top{height:66px;border-bottom:1px solid #202020;grid-template-columns:1fr auto 1fr;padding:0 4.5%}
+.home-title{justify-self:start;border:0;background:none;color:#f5f5f5;font:500 17px 'Atkinson Hyperlegible';letter-spacing:.1px;padding:8px 0}
+.top-nav{display:none}
+.top-tools{gap:15px}
+.shelf-search{color:#aaa}
+.shelf-search input{font:14px 'Atkinson Hyperlegible';color:#f5f5f5}
+.shelf-search input::placeholder{color:#888}
+.upload-button{border:1px solid #666;color:#f5f5f5;padding:9px 13px;font:12px 'Atkinson Hyperlegible';letter-spacing:.2px}
+.upload-button:hover{border-color:#fff;color:#fff;background:#171717}
+.shelf-intro{padding:45px 20px 0}
+.shelf-intro h1{font:500 clamp(27px,3vw,38px) 'Atkinson Hyperlegible';letter-spacing:0;color:#f5f5f5;margin:0}
+.shelf-intro h1 em{font-style:normal;color:#f5f5f5}
+.shelf-intro p,.micro-label,.archive-filters{display:none}
+.spine-stage{margin-top:22px;min-height:315px;width:min(1180px,96%);grid-template-columns:42px minmax(0,1fr) 42px}
+.spine-track{height:315px;gap:12px}
+.spine-card{filter:grayscale(1);background:linear-gradient(90deg,#0008,transparent 20%,#ffffff12 50%,#0006),#353535;opacity:.85;border-color:#777}
+.spine-card.spine-active{filter:grayscale(1);background:#303030;box-shadow:10px 17px 26px #000,0 0 0 1px #aaa}
+.cover-face{background:linear-gradient(145deg,#ffffff12,transparent 45%),linear-gradient(90deg,#0006,transparent 18%,#ffffff08 50%,#0005),#303030;color:#f5f5f5}
+.cover-kicker,.cover-art-mark,.cover-face i{display:none}
+.cover-face strong{font:500 18px/1.2 'Atkinson Hyperlegible';max-width:135px}
+.cover-face small{font:12px 'Atkinson Hyperlegible';color:#d0d0d0}
+.spine-title{font:12px 'Atkinson Hyperlegible'}
+.spine-author{font:9px 'Atkinson Hyperlegible'}
+.spine-mark{font:8px 'Atkinson Hyperlegible'}
+.selected-book{margin-top:6px}
+.selected-book h2{font:500 23px 'Atkinson Hyperlegible';color:#f5f5f5;margin:8px 0 3px}
+.selected-book>p{font:14px 'Atkinson Hyperlegible';color:#aaa}
+.selected-actions{margin-top:17px}
+.selected-actions>span{font:12px 'Atkinson Hyperlegible';color:#aaa}
+.open-book{background:#f2f2f2;color:#111;border:1px solid #f2f2f2;padding:10px 15px;font:600 12px 'Atkinson Hyperlegible';letter-spacing:.1px}
+.open-book:hover{background:#dcdcdc;color:#000}
+.shelf-arrow{background:#0a0a0a;border-color:#4b4b4b;color:#eee}
+.shelf-arrow:hover:not(:disabled){border-color:#fff;color:#fff}
+.empty-shelf{margin:45px auto 55px;border-color:#333}
+.empty-shelf-line{background:#eee}
+.empty-symbol{border-color:#555;color:#eee}
+.empty-shelf h2{font:500 23px 'Atkinson Hyperlegible';color:#f5f5f5}
+.empty-shelf p{display:none}
+.empty-archive-visual{filter:grayscale(1);margin-bottom:13px}
+.empty-feature{background:#292929;color:#fff}
+.empty-feature i,.empty-feature small{display:none}
+.empty-feature b{font:500 17px 'Atkinson Hyperlegible'}
+.empty-spine{filter:grayscale(1)}
+.shelf-footer{display:none}
+.toast{background:#f2f2f2;color:#111;font:13px 'Atkinson Hyperlegible'}
+/* Reading typography remains soft and readable, not condensed */
+.reader-view{font-family:'Atkinson Hyperlegible','Source Sans 3',sans-serif}
+.reader-sidebar{background:#ededed;color:#171717}
+.reader-user{background:#e0e0e0}
+.reader-user b,.reader-user small,.reader-side-links span{color:#222}
+.reader-brand{display:none}
+.reader-avatar{background:#333;color:#fff}
+.reading-area{background:#f5f5f2}
+.reading-paper{font-family:'Atkinson Hyperlegible',Georgia,serif;line-height:1.9}
+@media(max-width:600px){.library-top{height:58px;padding:0 15px}.home-title{font-size:16px}.upload-button{font-size:11px}.shelf-intro{padding-top:35px}.shelf-intro h1{font-size:27px}.spine-stage{margin-top:10px;min-height:230px}.spine-track{height:230px}.spine-card.spine-active{height:196px}.selected-book h2{font-size:21px}.empty-shelf{margin:35px auto}.empty-archive-visual{transform:scale(.78)}}
