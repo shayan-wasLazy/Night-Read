@@ -119,3 +119,53 @@
 .reading-area{background:#f5f5f2}
 .reading-paper{font-family:'Atkinson Hyperlegible',Georgia,serif;line-height:1.9}
 @media(max-width:600px){.library-top{height:58px;padding:0 15px}.home-title{font-size:16px}.upload-button{font-size:11px}.shelf-intro{padding-top:35px}.shelf-intro h1{font-size:27px}.spine-stage{margin-top:10px;min-height:230px}.spine-track{height:230px}.spine-card.spine-active{height:196px}.selected-book h2{font-size:21px}.empty-shelf{margin:35px auto}.empty-archive-visual{transform:scale(.78)}}
+
+/* Full cinematic archive gallery — monochrome placeholders until real covers are added */
+body{background:#000}
+.library-screen{min-height:100vh;background:#000;color:#f4f4f4;display:flex;align-items:center;justify-content:center;padding:36px 4vw;overflow:hidden}
+.archive-header,.archive-filterbar,.gallery-stage,.gallery-caption,.gallery-empty{width:100%;max-width:1120px}
+.archive-header{height:54px;flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border-bottom:1px solid #454545;background:#222;padding:0 22px}
+.archive-back{justify-self:start;border:1px solid #999;background:#292929;color:#eee;padding:3px 6px;font:9px 'Atkinson Hyperlegible',sans-serif;display:flex;gap:5px;align-items:center}
+.archive-back span{font-size:8px}
+.archive-heading{text-align:center;font:600 12px 'Atkinson Hyperlegible';letter-spacing:1.2px;color:#f2f2f2}
+.archive-heading small{display:block;font:7px 'Atkinson Hyperlegible';letter-spacing:1.5px;color:#aaa;margin-top:3px}
+.archive-count{justify-self:end;color:#aaa;font:8px 'Atkinson Hyperlegible';letter-spacing:1px}
+.archive-filterbar{height:55px;flex:none;background:#222;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 18px}
+.archive-filterbar>button{border:1px solid #555;background:transparent;color:#ccc;padding:4px 9px;font:8px 'Atkinson Hyperlegible';letter-spacing:.7px}
+.archive-filterbar>button.filter-active{background:#f1f1f1;color:#111;border-color:#f1f1f1}
+.archive-filterbar .archive-add{margin-left:auto;display:flex;align-items:center;gap:6px}
+.archive-search{display:flex;align-items:center;gap:5px;margin-left:auto;color:#aaa}
+.archive-search input{width:85px;background:none;border:0;outline:0;color:#fff;font:8px 'Atkinson Hyperlegible';letter-spacing:.8px}
+.archive-search input::placeholder{color:#999}
+.archive-stage-spacer{height:0}
+.gallery-stage{height:clamp(260px,38vh,390px);flex:none;background:#222;display:grid;grid-template-columns:36px minmax(0,1fr) 36px;align-items:center;padding:0 10px;overflow:hidden}
+.gallery-track{height:100%;display:flex;align-items:center;justify-content:center;gap:clamp(8px,1.1vw,18px);overflow-x:auto;scrollbar-width:none;padding:20px 12px}
+.gallery-track::-webkit-scrollbar{display:none}
+.gallery-book{--book-color:#555;position:relative;flex:0 0 54px;height:66%;padding:0;border:0;background:transparent;transition:all .28s ease;box-shadow:5px 7px 13px #0009;transform:translateY(3px)}
+.gallery-book:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0008 0,transparent 20%,#ffffff12 50%,#0005 100%);z-index:2;pointer-events:none}
+.gallery-cover{position:absolute;inset:0;background:var(--book-color);border:1px solid #888;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 5px;color:#f4f4f4;overflow:hidden}
+.gallery-cover:before{content:'';position:absolute;inset:5px;border:1px solid #ffffff50}
+.gallery-cover-title{font:600 10px/1.15 'Atkinson Hyperlegible';writing-mode:vertical-rl;transform:rotate(180deg);max-height:85%;overflow:hidden;text-align:center}
+.gallery-cover-author{display:none}
+.gallery-book-active{flex-basis:145px;height:82%;transform:translateY(-3px) rotate(-2deg);box-shadow:12px 15px 25px #000c,0 0 0 1px #999;z-index:3}
+.gallery-book-active .gallery-cover{padding:17px 13px;background:linear-gradient(145deg,#ffffff15,transparent 50%),var(--book-color)}
+.gallery-book-active .gallery-cover-title{writing-mode:horizontal-tb;transform:none;max-height:none;font:600 20px/1.08 'Atkinson Hyperlegible';overflow-wrap:anywhere;max-width:100%}
+.gallery-book-active .gallery-cover-author{display:block;font:10px 'Atkinson Hyperlegible';color:#ddd;margin-top:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gallery-arrow{width:28px;height:28px;border:0;background:transparent;color:#eee;display:grid;place-items:center;z-index:4}
+.gallery-arrow:disabled{opacity:.25}
+.gallery-caption{height:130px;flex:none;background:#222;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:0 10px 15px}
+.gallery-caption h1{font:500 20px 'Atkinson Hyperlegible';margin:0 0 5px;color:#f4f4f4}
+.gallery-caption p{font:11px 'Atkinson Hyperlegible';color:#c4c4c4;margin:0 0 5px}
+.gallery-caption>span{font:8px 'Atkinson Hyperlegible';color:#aaa;letter-spacing:.8px}
+.gallery-caption button{position:absolute;opacity:0;pointer-events:none}
+.gallery-empty{height:clamp(330px,48vh,520px);background:#222;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px}
+.empty-gallery-row{height:200px;display:flex;align-items:center;justify-content:center;gap:12px}
+.empty-gallery-row i{display:block;width:32px;height:140px;background:linear-gradient(90deg,#161616,#777,#292929);border:1px solid #777;box-shadow:5px 8px 13px #0009}
+.empty-gallery-row i:nth-child(2),.empty-gallery-row i:nth-child(4){height:165px}
+.empty-gallery-row b{width:130px;height:190px;background:#454545;border:1px solid #999;box-shadow:10px 13px 20px #000b;display:grid;place-items:center;font:600 22px 'Atkinson Hyperlegible';color:#eee;position:relative}
+.empty-gallery-row b:after{content:'';position:absolute;inset:7px;border:1px solid #ffffff55}
+.empty-add{display:flex;align-items:center;gap:9px;background:transparent;border:1px solid #aaa;color:#eee;padding:10px 15px;font:10px 'Atkinson Hyperlegible';letter-spacing:.6px}
+.empty-add:hover{background:#eee;color:#111}
+.library-top,.shelf-intro,.spine-stage,.selected-book,.empty-shelf,.shelf-footer{display:none!important}
+@media(min-width:1000px){.library-screen{padding:0 4vw}.archive-header,.archive-filterbar,.gallery-stage,.gallery-caption,.gallery-empty{max-width:1120px}.archive-header{margin-top:0}}
+@media(max-width:700px){.library-screen{padding:0;justify-content:flex-start}.archive-header{padding:0 12px;height:48px}.archive-filterbar{height:50px;gap:5px;padding:0 9px}.archive-filterbar>button{font-size:7px;padding:4px 6px}.archive-search{display:none}.archive-filterbar .archive-add{margin-left:auto}.gallery-stage{height:42vh;min-height:245px;grid-template-columns:25px minmax(0,1fr) 25px;padding:0 3px}.gallery-track{justify-content:flex-start;gap:9px;padding:15px 8px}.gallery-book{flex-basis:43px;height:60%}.gallery-book-active{flex-basis:122px;height:78%}.gallery-book-active .gallery-cover-title{font-size:16px}.gallery-caption{height:115px}.gallery-caption h1{font-size:18px}.gallery-empty{height:65vh}.empty-gallery-row{transform:scale(.82)}}
