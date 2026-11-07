@@ -1,24 +1,152 @@
-import {useEffect,useRef,useState} from 'react';
-import {BookOpen,Bookmark,Clock3,House,Library,Menu,Moon,MoreHorizontal,Search,Settings,Sun,Upload,X,ChevronRight,Check,CloudDownload,ArrowUpRight} from 'lucide-react';
-type Book={id:number;title:string;author:string;format:string;filename:string;progress:number;created_at:string};
-const API='/api';
-const samples=[{title:'The Midnight Library',author:'Matt Haig',tag:'FICTION',tone:'cover-midnight',initial:'M'},{title:'Before the Coffee Gets Cold',author:'Toshikazu Kawaguchi',tag:'FICTION',tone:'cover-coffee',initial:'C'},{title:'The Name of the Wind',author:'Patrick Rothfuss',tag:'FANTASY',tone:'cover-wind',initial:'W'},{title:'A Psalm for the Wild-Built',author:'Becky Chambers',tag:'SCI-FI',tone:'cover-wild',initial:'P'}];
-export default function App(){const[dark,setDark]=useState(()=>localStorage.getItem('nightread-theme')==='dark');const[tab,setTab]=useState('Home');const[query,setQuery]=useState('');const[books,setBooks]=useState<Book[]>([]);const[uploading,setUploading]=useState(false);const[reader,setReader]=useState<Book|null>(null);const[toast,setToast]=useState('');const input=useRef<HTMLInputElement>(null);
-useEffect(()=>{document.documentElement.dataset.theme=dark?'dark':'light';localStorage.setItem('nightread-theme',dark?'dark':'light')},[dark]);
-const load=async()=>{try{const r=await fetch(API+'/books');if(r.ok)setBooks(await r.json())}catch{}};
-useEffect(()=>{load()},[]);
-const notify=(s:string)=>{setToast(s);window.setTimeout(()=>setToast(''),2600)};
-const upload=async(e:React.ChangeEvent<HTMLInputElement>)=>{const files=Array.from(e.target.files||[]);if(!files.length)return;setUploading(true);let ok=0;for(const file of files){const form=new FormData();form.append('file',file);try{const r=await fetch(API+'/books',{method:'POST',body:form});if(r.ok)ok++}catch{}}await load();setUploading(false);notify(ok?'Added '+ok+' book'+(ok===1?'':'s')+' to your library.':'Upload failed. Check that NightRead is online.');e.target.value=''};
-const filtered=books.filter(b=>(b.title+' '+b.author).toLowerCase().includes(query.toLowerCase()));
-const nav=[['Home',House],['My library',Library],['Currently reading',BookOpen],['Reading history',Clock3],['Bookmarks',Bookmark]] as const;
-return <div className="app-shell"><aside className="sidebar"><div className="brand"><span className="brand-mark">n.</span><span>nightread<small>YOUR READING ROOM</small></span></div><div className="side-label">YOUR SPACE</div><nav>{nav.map(([label,Icon])=><button key={label} className={'nav-item '+(tab===label?'active':'')} onClick={()=>setTab(label)}><Icon size={18}/><span>{label}</span>{label==='My library'&&books.length>0&&<i>{books.length}</i>}</button>)}</nav><div className="sidebar-bottom"><div className="storage-card"><div className="storage-icon"><CloudDownload size={17}/></div><div><b>Your library, everywhere</b><small>Private · Synced with your server</small></div></div><button className="nav-item" onClick={()=>notify('Settings are coming soon.')}><Settings size={18}/>Settings</button><div className="profile"><div className="avatar">S</div><div><b>Shayan</b><small>Personal library</small></div><MoreHorizontal size={18}/></div></div></aside>
-<main className="main"><header className="topbar"><button className="mobile-menu" onClick={()=>document.body.classList.toggle('menu-open')}><Menu/></button><div className="crumb">Your space <span>/</span> {tab}</div><div className="top-actions"><label className="search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search books, authors…"/><kbd>⌘ K</kbd></label><button className="icon-btn theme-btn" title="Toggle theme" onClick={()=>setDark(!dark)}>{dark?<Sun size={18}/>:<Moon size={18}/>}</button><button className="avatar small-avatar">S</button></div></header>
-<div className="content"><section className="welcome-row"><div><div className="eyebrow">YOUR PERSONAL LIBRARY <span>✳</span> A LITTLE TIME FOR YOURSELF</div><h1>{tab==='Home'?'Stories worth staying up for.':tab==='My library'?'Your personal library.':tab+'.'}</h1><p className="subhead">A quiet corner of the internet, made just for your next chapter.</p></div><button className="primary-btn" onClick={()=>input.current?.click()}><Upload size={16}/>{uploading?'Adding books…':'Add books'}<ArrowUpRight size={15}/></button><input ref={input} type="file" accept=".epub,.pdf,.txt" multiple hidden onChange={upload}/></section>
-<section className="hero"><div className="hero-copy"><span className="pill">A MOMENT TO YOURSELF</span><h2>Keep the story<br/>going<span className="accent">.</span></h2><p>Pick up where you left off. Your next favourite page is waiting.</p><button className="dark-btn" onClick={()=>books.length?setReader(books[0]):input.current?.click()}>{books.length?'Continue reading':'Find your first book'}<ArrowUpRight size={16}/></button><div className="hero-meta"><span><BookOpen size={14}/> {books.length} books in your library</span><span><Clock3 size={14}/> Your pace, your place</span></div></div><div className="hero-art"><div className="sun-disc"/><div className="art-book"><div className="book-spine"/><div className="art-title">THE ART<br/>OF SLOW<br/>LIVING</div><div className="art-author">A NIGHTREAD EDITION</div><div className="art-stamp">NR<br/>01</div></div><div className="art-orbit orbit-one"/><div className="art-orbit orbit-two"/><div className="art-caption">A GOOD BOOK<br/>IS A PLACE TO GO.</div></div></section>
-<div className="section-heading"><div><div className="eyebrow">A FEW GOOD STORIES</div><h3>{books.length?'Your library':'A place to begin'}</h3></div><button className="text-btn" onClick={()=>setTab('My library')}>View library <ChevronRight size={16}/></button></div>
-{books.length?<div className="book-grid">{filtered.map(b=><button className="book-card" key={b.id} onClick={()=>setReader(b)}><div className="uploaded-cover"><span className="cover-format">{b.format.toUpperCase()}</span><strong>{b.title}</strong><small>{b.author}</small></div><div className="book-info"><b>{b.title}</b><span>{b.author}</span><div className="progress"><i style={{width:b.progress+'%'}}/></div><small>{b.progress}% read</small></div></button>)}</div>:<div className="empty-state"><div className="empty-icon"><Library size={25}/></div><h4>Your shelves are waiting.</h4><p>Add an EPUB, PDF or TXT file to start building your personal library.</p><button className="outline-btn" onClick={()=>input.current?.click()}><Upload size={15}/> Import your first book</button></div>}
-{!books.length&&<><div className="section-heading discover-heading"><div><div className="eyebrow">A LITTLE INSPIRATION</div><h3>Stories to get lost in</h3></div><span className="muted-note">A few reader favourites</span></div><div className="sample-grid">{samples.map(b=><article className="sample-card" key={b.title}><div className={'sample-cover '+b.tone}><span>{b.tag}</span><strong>{b.title}</strong><small>{b.author}</small><i>{b.initial}</i></div><b>{b.title}</b><span>{b.author}</span></article>)}</div></>}
-<footer className="footer"><span>Made for the love of a good story.</span><span>YOUR LIBRARY. YOUR RULES. <b>✳</b></span></footer></div></main>
-{reader&&<Reader book={reader} onClose={()=>setReader(null)} onProgress={p=>{fetch(API+'/books/'+reader.id+'/progress',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({progress:p})});setBooks(old=>old.map(b=>b.id===reader.id?{...b,progress:p}:b))}}/>}
-{toast&&<div className="toast"><Check size={16}/>{toast}</div>}</div>}
-function Reader({book,onClose,onProgress}:{book:Book;onClose:()=>void;onProgress:(p:number)=>void}){const[font,setFont]=useState(19);const[content,setContent]=useState('Loading your book…');const[dark,setDark]=useState(false);useEffect(()=>{fetch(API+'/books/'+book.id+'/content').then(r=>r.text()).then(setContent).catch(()=>setContent('Unable to load this book.'))},[book.id]);return <div className="reader-overlay"><header><button className="icon-btn" onClick={onClose}><X/></button><div><b>{book.title}</b><small>{book.author}</small></div><div className="reader-tools"><button className="icon-btn" onClick={()=>setFont(Math.max(15,font-1))}>A−</button><button className="icon-btn" onClick={()=>setFont(Math.min(27,font+1))}>A+</button><button className="icon-btn" onClick={()=>setDark(!dark)}>{dark?<Sun/>:<Moon/>}</button></div></header><article className={'reading-paper '+(dark?'reader-dark':'')} style={{fontSize:font}}><div className="reader-kicker">YOUR READING ROOM</div><h1>{book.title}</h1><p className="reader-author">{book.author}</p><div className="reader-rule"/><p>{content.slice(0,16000)}</p><button className="primary-btn" onClick={()=>{onProgress(Math.min(100,book.progress+5));onClose()}}>Save progress <Check size={15}/></button></article></div>}
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight, BookOpen, Bookmark, ChevronLeft, ChevronRight, Library, Moon, Search, Sun, Upload, X } from 'lucide-react';
+
+type Book = { id: number; title: string; author: string; format: string; filename: string; progress: number; created_at: string };
+const API = '/api';
+const palette = ['#34443c', '#5a3935', '#39465c', '#6a583c', '#4d465d', '#31545a', '#685047', '#3f5140'];
+
+function bookColor(index: number) { return palette[index % palette.length]; }
+function splitIntoPages(value: string, chars = 1450) {
+  const words = value.split(/\s+/);
+  const pages: string[] = [];
+  let page = '';
+  for (const word of words) {
+    if ((page + ' ' + word).length > chars && page) { pages.push(page); page = word; }
+    else page += (page ? ' ' : '') + word;
+  }
+  if (page) pages.push(page);
+  return pages.length ? pages : [''];
+}
+
+export default function App() {
+  const [books, setBooks] = useState<Book[]>([]);
+  const [selected, setSelected] = useState(0);
+  const [query, setQuery] = useState('');
+  const [reader, setReader] = useState<Book | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [toast, setToast] = useState('');
+  const input = useRef<HTMLInputElement>(null);
+
+  const load = async () => {
+    try {
+      const response = await fetch(API + '/books');
+      if (response.ok) {
+        const data: Book[] = await response.json();
+        setBooks(data);
+        setSelected(current => Math.min(current, Math.max(0, data.length - 1)));
+      }
+    } catch { /* server may be offline */ }
+  };
+  useEffect(() => { load(); }, []);
+
+  const filtered = useMemo(() => books.filter(book => (book.title + ' ' + book.author).toLowerCase().includes(query.toLowerCase())), [books, query]);
+  const active = filtered[selected] || filtered[0];
+  const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2800); };
+
+  const upload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    setUploading(true);
+    let added = 0;
+    for (const file of files) {
+      const form = new FormData();
+      form.append('file', file);
+      try { const response = await fetch(API + '/books', { method: 'POST', body: form }); if (response.ok) added++; } catch { /* handled below */ }
+    }
+    await load();
+    setUploading(false);
+    notify(added ? `Added ${added} book${added === 1 ? '' : 's'} to your shelf.` : 'Upload failed. Check your connection to NightRead.');
+    event.target.value = '';
+  };
+
+  const move = (direction: number) => setSelected(current => Math.max(0, Math.min(filtered.length - 1, current + direction)));
+
+  return <main className="library-screen">
+    <header className="library-top">
+      <button className="wordmark" onClick={() => { setReader(null); setQuery(''); }}><span className="wordmark-mark">N</span><span>NIGHTREAD<small>THE PRIVATE READING ROOM</small></span></button>
+      <nav className="top-nav"><button className="nav-current"><Library size={14}/> LIBRARY</button><button onClick={() => notify('Collections are coming next.')}>COLLECTIONS</button><button onClick={() => notify('Your saved passages will live here.')}>SAVED</button></nav>
+      <div className="top-tools">
+        <label className="shelf-search"><Search size={15}/><input value={query} onChange={event => { setQuery(event.target.value); setSelected(0); }} placeholder="Find a book"/></label>
+        <button className="upload-button" onClick={() => input.current?.click()}><Upload size={15}/><span>{uploading ? 'ADDING' : 'ADD BOOK'}</span></button>
+        <input ref={input} type="file" accept=".epub,.pdf,.txt" multiple hidden onChange={upload}/>
+      </div>
+    </header>
+
+    <section className="shelf-intro">
+      <div className="micro-label">YOUR LIBRARY <span>—</span> YOUR OWN LITTLE UNIVERSE</div>
+      <h1>Choose your next <em>world.</em></h1>
+      <p>A shelf of stories, kept close and ready whenever you are.</p>
+    </section>
+
+    {filtered.length ? <>
+      <section className="spine-stage" aria-label="Book shelf carousel">
+        <button className="shelf-arrow" onClick={() => move(-1)} disabled={selected <= 0} aria-label="Previous book"><ArrowLeft size={18}/></button>
+        <div className="spine-track">
+          {filtered.map((book, index) => {
+            const distance = index - selected;
+            return <button key={book.id} className={'spine-card ' + (index === selected ? 'spine-active' : '')} style={{ '--book-color': bookColor(index), '--distance': distance } as React.CSSProperties} onClick={() => setSelected(index)} title={book.title}>
+              <span className="spine-title">{book.title}</span><span className="spine-author">{book.author}</span><span className="spine-mark">{String(index + 1).padStart(2, '0')}</span>
+            </button>;
+          })}
+        </div>
+        <button className="shelf-arrow" onClick={() => move(1)} disabled={selected >= filtered.length - 1} aria-label="Next book"><ArrowRight size={18}/></button>
+      </section>
+      <section className="selected-book">
+        <div className="selected-meta"><span>{active?.format.toUpperCase()} EDITION</span><i/><span>{String(selected + 1).padStart(2, '0')} / {String(filtered.length).padStart(2, '0')}</span></div>
+        <h2>{active?.title}</h2>
+        <p>{active?.author}</p>
+        <div className="book-progress"><span style={{ width: (active?.progress || 0) + '%' }}/></div>
+        <div className="selected-actions"><button className="open-book" onClick={() => active && setReader(active)}><BookOpen size={15}/> {active?.progress ? 'CONTINUE READING' : 'OPEN BOOK'} <ArrowRight size={15}/></button><span>{active?.progress || 0}% read</span></div>
+      </section>
+    </> : <section className="empty-shelf">
+      <div className="empty-shelf-line"/>
+      <div className="empty-symbol"><BookOpen size={25}/></div>
+      <h2>{books.length ? 'No books found.' : 'A shelf waiting for stories.'}</h2>
+      <p>{books.length ? 'Try another title or author.' : 'Add your first EPUB, PDF or TXT and it will appear here, stored safely on your home server.'}</p>
+      {!books.length && <button className="open-book" onClick={() => input.current?.click()}><Upload size={15}/> ADD YOUR FIRST BOOK <ArrowRight size={15}/></button>}
+    </section>}
+
+    <footer className="shelf-footer"><span>PRIVATE BY DESIGN <i>·</i> STORED ON YOUR SERVER</span><span>{books.length} {books.length === 1 ? 'BOOK' : 'BOOKS'} ON YOUR SHELF</span><span>MADE FOR THE LOVE OF READING</span></footer>
+    {reader && <Reader book={reader} onClose={() => { setReader(null); load(); }} onProgress={progress => setBooks(old => old.map(book => book.id === reader.id ? { ...book, progress } : book))}/>}
+    {toast && <div className="toast">{toast}</div>}
+  </main>;
+}
+
+function Reader({ book, onClose, onProgress }: { book: Book; onClose: () => void; onProgress: (progress: number) => void }) {
+  const [content, setContent] = useState('Loading your book…');
+  const [page, setPage] = useState(0);
+  const [night, setNight] = useState(false);
+  const [fontSize, setFontSize] = useState(17);
+  const pages = useMemo(() => splitIntoPages(content), [content]);
+  const isText = book.format.toLowerCase() === 'txt' || book.filename.toLowerCase().endsWith('.txt');
+
+  useEffect(() => {
+    if (!isText) { setContent('This file is stored on your NightRead server. The dedicated EPUB/PDF page renderer is being added; use the original file link below in the meantime.'); return; }
+    fetch(API + '/books/' + book.id + '/content').then(response => response.text()).then(setContent).catch(() => setContent('Unable to load this book. Please check your connection.'));
+  }, [book.id, isText]);
+
+  const saveProgress = () => {
+    const progress = Math.min(100, Math.round(((page + 1) / Math.max(pages.length, 1)) * 100));
+    fetch(API + '/' + 'books/' + book.id + '/progress', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ progress }) });
+    onProgress(progress);
+  };
+
+  return <div className={'reader-view ' + (night ? 'reader-night' : '')}>
+    <aside className="reader-sidebar">
+      <div className="reader-brand">N<span>.</span></div>
+      <div className="reader-user"><div className="reader-avatar">S</div><small>NOW READING</small><b>{book.title}</b></div>
+      <div className="reader-side-links"><span><Library size={15}/> My shelf</span><span><Bookmark size={15}/> Bookmarks</span></div>
+      <div className="reader-side-bottom"><span>PRIVATE READING ROOM</span><span>SYNCED TO HOME SERVER</span></div>
+    </aside>
+    <section className="reading-area">
+      <header className="reading-header"><button className="back-to-shelf" onClick={onClose}><ChevronLeft size={17}/> BACK TO SHELF</button><div className="reading-breadcrumb">{book.title} <span>\</span> {isText ? 'Reading' : book.format.toUpperCase()}</div><div className="reading-controls"><button onClick={() => setFontSize(size => Math.max(14, size - 1))}>A−</button><button onClick={() => setFontSize(size => Math.min(24, size + 1))}>A+</button><button onClick={() => setNight(value => !value)} aria-label="Toggle reading theme">{night ? <Sun size={16}/> : <Moon size={16}/>}</button></div></header>
+      <div className="paper-wrap"><article className="reading-paper" style={{ fontSize: fontSize + 'px' }}>
+        <div className="paper-page-number">{page + 1}</div>
+        <div className="paper-columns">{isText ? <p>{pages[page]}</p> : <div className="format-notice"><BookOpen size={23}/><h2>Your book is safe on the shelf.</h2><p>{content}</p><a href={API + '/books/' + book.id + '/download'} target="_blank" rel="noreferrer">OPEN ORIGINAL FILE <ArrowRight size={14}/></a></div>}</div>
+      </article></div>
+      <div className="page-strip"><button onClick={() => setPage(value => Math.max(0, value - 1))} disabled={page === 0}><ChevronLeft size={17}/></button><div className="page-thumbnails">{(isText ? pages : ['Original file']).map((_, index) => <button key={index} className={page === index ? 'page-thumb active-thumb' : 'page-thumb'} onClick={() => setPage(index)}><span>{index + 1}</span></button>)}</div><button onClick={() => setPage(value => Math.min(pages.length - 1, value + 1))} disabled={!isText || page >= pages.length - 1}><ChevronRight size={17}/></button></div>
+      <div className="reader-bottom"><span>{book.title}</span><span>PAGE {page + 1} OF {isText ? pages.length : '—'}</span><button onClick={saveProgress}>SAVE READING POSITION <ArrowRight size={13}/></button></div>
+    </section>
+    <button className="close-reader" onClick={onClose} aria-label="Close reader"><X size={18}/></button>
+  </div>;
+}
