@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { ArrowLeft, ArrowRight, BookOpen, Bookmark, ChevronLeft, ChevronRight, Library, Moon, Search, Sun, Upload, X } from 'lucide-react';
 
 type Book = { id: number; title: string; author: string; format: string; filename: string; progress: number; created_at: string };
@@ -84,7 +84,7 @@ export default function App() {
         <div className="spine-track">
           {filtered.map((book, index) => {
             const distance = index - selected;
-            return <button key={book.id} className={'spine-card ' + (index === selected ? 'spine-active' : '')} style={{ '--book-color': bookColor(index), '--distance': distance } as React.CSSProperties} onClick={() => setSelected(index)} title={book.title}>
+            return <button key={book.id} className={'spine-card ' + (index === selected ? 'spine-active' : '')} style={{ '--book-color': bookColor(index), '--distance': distance } as CSSProperties} onClick={() => setSelected(index)} title={book.title}>
               <span className="spine-title">{book.title}</span><span className="spine-author">{book.author}</span><span className="spine-mark">{String(index + 1).padStart(2, '0')}</span>
             </button>;
           })}
