@@ -40,4 +40,40 @@ export default function App(){
  {reader&&<Reader book={reader} onClose={()=>setReader(null)} onProgress={p=>setBooks(old=>old.map(b=>b.id===reader.id?{...b,progress:p}:b))}/>}
  </main>;
 }
-function Reader({book,onClose,onProgress}:{book:Book;onClose:()=>void;onProgress:(n:number)=>void}){const [content,setContent]=useState('Loading…'),[page,setPage]=useState(0);const pages=useMemo(()=>{const words=content.split(/\\s+/),out:string[]=[];let p='';for(const w of words){if((p+' '+w).length>1450&&p){out.push(p);p=w;}else p+=(p?' ':'')+w;}if(p)out.push(p);return out.length?out:[''];},[content]);useEffect(()=>{fetch(API+'/books/'+book.id+'/content').then(r=>r.text()).then(setContent).catch(()=>setContent('Unable to load file'));},[book.id]);const save=()=>{const p=Math.round((page+1)/pages.length*100);fetch(API+'/books/'+book.id+'/progress',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({progress:p})});onProgress(p);};return <div className="reader-view"><header><button onClick={onClose}>← BACK</button><span>{book.title}</span></header><article>{pages[page]}</article><footer><button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={!page}>PREVIOUS</button><span>{page+1} / {pages.length}</span><button onClick={()=>setPage(p=>Math.min(pages.length-1,p+1))}>NEXT</button><button onClick={save}>SAVE POSITION</button></footer></div>;}
+function Reader({book,onClose,onProgress}:{book:Book;onClose:()=>void;onProgress:(n:number)=>void}){
+ const [error,setError]=useState(''),[loading,setLoading]=useState(true),[page,setPage]=useState(1),[pageCount,setPageCount]=useState(0),[chapters,setChapters]=useState<Array<{label:string;href:string}>>([]),[chapter,setChapter]=useState('');
+ const pdfCanvas=useRef<HTMLCanvasElement>(null),epubHost=useRef<HTMLDivElement>(null),pdfRef=useRef<any>(null),epubRef=useRef<any>(null),renditionRef=useRef<any>(null),renderTask=useRef<any>(null);
+ const isPdf=book.format==='pdf',isEpub=book.format==='epub';
+ const url=API+'/books/'+book.id+'/content';
+ useEffect(()=>{let alive=true;let resizeObserver:ResizeObserver|undefined;
+  const start=async()=>{setLoading(true);setError('');try{
+   const response=await fetch(url);if(!response.ok)throw Error('Could not load the book file.');const bytes=await response.arrayBuffer();if(!alive)return;
+   if(isPdf){
+    const pdfjs:any=await import('pdfjs-dist');
+    pdfjs.GlobalWorkerOptions.workerSrc=(await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
+    const pdf=await pdfjs.getDocument({data:bytes}).promise;if(!alive){pdf.destroy();return;}pdfRef.current=pdf;setPageCount(pdf.numPages);setPage(1);
+   }else if(isEpub){
+    const epubModule:any=await import('epubjs');const makeBook=epubModule.default||epubModule;
+    const epub=makeBook(bytes);epubRef.current=epub;
+    await epub.ready;if(!alive){epub.destroy();return;}
+    const nav=await epub.loaded.navigation;const entries:Array<{label:string;href:string}>=[];const flatten=(items:any[])=>items.forEach(item=>{entries.push({label:item.label||'Chapter',href:item.href});if(item.subitems?.length)flatten(item.subitems);});flatten(nav.toc||[]);setChapters(entries);
+    if(!epubHost.current)throw Error('Reader surface is unavailable.');
+    const rendition=epub.renderTo(epubHost.current,{width:'100%',height:'100%',flow:'paginated',spread:'auto',manager:'default'});renditionRef.current=rendition;
+    rendition.on('relocated',(location:any)=>{if(!alive)return;const c=location?.start?.href||'';setChapter(c);const pct=location?.start?.percentage; if(typeof pct==='number')onProgress(Math.max(0,Math.min(100,Math.round(pct*100))));});
+    await rendition.display();
+   }else throw Error('This reader supports EPUB and PDF files.');
+  }catch(e){if(alive)setError(e instanceof Error?e.message:'Unable to open book.');}finally{if(alive)setLoading(false);}};
+  start();
+  return()=>{alive=false;try{renderTask.current?.cancel();}catch{};try{renditionRef.current?.destroy();}catch{};try{epubRef.current?.destroy();}catch{};try{pdfRef.current?.destroy();}catch{};resizeObserver?.disconnect();};
+ },[book.id,url,isPdf,isEpub]);
+ const renderPdf=useCallback(async(n:number)=>{const pdf=pdfRef.current,canvas=pdfCanvas.current;if(!pdf||!canvas)return;try{renderTask.current?.cancel();const p=await pdf.getPage(n);const host=canvas.parentElement;const base=p.getViewport({scale:1});const scale=Math.min(2.2,Math.max(0.6,(host?.clientWidth||800)/base.width));const viewport=p.getViewport({scale});const ctx=canvas.getContext('2d');if(!ctx)return;canvas.width=viewport.width;canvas.height=viewport.height;renderTask.current=p.render({canvasContext:ctx,viewport});await renderTask.current.promise;setPage(n);}catch(e){if(!(e instanceof Error&&e.name==='RenderingCancelledException'))setError('Unable to render this PDF page.');}},[]);
+ useEffect(()=>{if(isPdf&&pdfRef.current&&pageCount)renderPdf(page);},[isPdf,pageCount,page,renderPdf]);
+ const turn=(delta:number)=>{if(isPdf)setPage(p=>Math.max(1,Math.min(pageCount,p+delta)));else renditionRef.current?.[delta>0?'next':'prev']();};
+ const jumpChapter=(href:string)=>{renditionRef.current?.display(href);};
+ const save=()=>{let progress=isPdf&&pageCount?Math.round(page/pageCount*100):book.progress||0;if(isEpub){const loc=renditionRef.current?.currentLocation?.();const pct=loc?.start?.percentage;if(typeof pct==='number')progress=Math.round(pct*100);}fetch(API+'/books/'+book.id+'/progress',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({progress})});onProgress(progress);};
+ return <div className="reader-view"><header><button onClick={onClose}>← BACK TO ARCHIVE</button><strong>{book.title}</strong><span>{isPdf?'PDF READER':isEpub?'EPUB READER':'READER'}</span></header>
+  {isEpub&&chapters.length>0&&<nav className="reader-toc"><label>CHAPTER</label><select value={chapter} onChange={e=>jumpChapter(e.target.value)}><option value="">CONTENTS</option>{chapters.map((c,i)=><option key={i} value={c.href}>{c.label}</option>)}</select></nav>}
+  <main className={'reader-stage '+(isPdf?'pdf-stage':'epub-stage')}><div className="reader-loading" style={{display:loading?'block':'none'}}>OPENING BOOK…</div>{error&&<div className="reader-error">{error}</div>}{isPdf&&<canvas ref={pdfCanvas} className="pdf-page" style={{display:loading||error?'none':'block'}}/>}{isEpub&&<div ref={epubHost} className="epub-book-host" style={{display:loading||error?'none':'block'}}/>}</main>
+  <footer><button onClick={()=>turn(-1)} disabled={loading||(isPdf?page<=1:false)}>PREVIOUS</button><span>{isPdf?(pageCount?page+' / '+pageCount:'—'):(chapter?chapters.findIndex(c=>c.href===chapter)+1+' / '+chapters.length:'CHAPTER')}</span><button onClick={()=>turn(1)} disabled={loading||(isPdf?page>=pageCount:false)}>NEXT</button><button onClick={save}>SAVE POSITION</button></footer>
+ </div>;
+}
