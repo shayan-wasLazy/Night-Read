@@ -63,8 +63,7 @@ export default function App() {
 
   return <main className="library-screen">
     <header className="library-top">
-      <button className="wordmark" onClick={() => { setReader(null); setQuery(''); }}><span className="wordmark-mark">N</span><span>NIGHTREAD<small>THE PRIVATE READING ROOM</small></span></button>
-      <nav className="top-nav"><button className="nav-current"><Library size={14}/> LIBRARY</button><button onClick={() => notify('Collections are coming next.')}>COLLECTIONS</button><button onClick={() => notify('Your saved passages will live here.')}>SAVED</button></nav>
+      <button className="home-title" onClick={() => { setReader(null); setQuery(''); }}>Library</button>
       <div className="top-tools">
         <label className="shelf-search"><Search size={15}/><input value={query} onChange={event => { setQuery(event.target.value); setSelected(0); }} placeholder="Find a book"/></label>
         <button className="upload-button" onClick={() => input.current?.click()}><Upload size={15}/><span>{uploading ? 'ADDING' : 'ADD BOOK'}</span></button>
@@ -72,15 +71,7 @@ export default function App() {
       </div>
     </header>
 
-    <section className="shelf-intro">
-      <div className="micro-label">NIGHTREAD ARCHIVE <span>—</span> YOUR PERSONAL COLLECTION</div>
-      <h1>Stories worth <em>keeping.</em></h1>
-      <p>A private shelf for the worlds you return to.</p>
-    </section>
-
-    <section className="archive-filters">
-      <span className="filter-active">ALL / すべて</span><span>RECENTLY ADDED</span><span>IN PROGRESS</span><span>FINISHED</span>
-    </section>
+    <section className="shelf-intro"><h1>Your library</h1></section>
 
     {filtered.length ? <>
       <section className="spine-stage" aria-label="Book shelf carousel">
@@ -96,20 +87,17 @@ export default function App() {
         <button className="shelf-arrow" onClick={() => move(1)} disabled={selected >= filtered.length - 1} aria-label="Next book"><ArrowRight size={18}/></button>
       </section>
       <section className="selected-book">
-        <div className="selected-meta"><span>{active?.format.toUpperCase()} EDITION</span><i/><span>{String(selected + 1).padStart(2, '0')} / {String(filtered.length).padStart(2, '0')}</span></div>
-        <h2>{active?.title}</h2>
-        <p>{active?.author}</p>
+        <h2>{active?.title}</h2><p>{active?.author}</p>
         <div className="selected-actions"><button className="open-book" onClick={() => active && setReader(active)}><BookOpen size={15}/> {active?.progress ? 'CONTINUE READING' : 'OPEN BOOK'} <ArrowRight size={15}/></button><span>{active?.progress || 0}% READ</span></div>
       </section>
     </> : <section className="empty-shelf">
       <div className="empty-shelf-line"/>
-      <div className="empty-archive-visual"><span className="empty-spine one"/><span className="empty-spine two"/><span className="empty-feature"><i>✳</i><b>YOUR NEXT<br/>FAVOURITE<br/>STORY</b><small>NIGHTREAD EDITION</small></span><span className="empty-spine three"/><span className="empty-spine four"/></div>
-      <h2>{books.length ? 'No books found.' : 'Your collection begins here.'}</h2>
-      <p>{books.length ? 'Try another title or author.' : 'Import your EPUB, PDF or TXT files. They’ll take their place on this shelf, stored on your own server.'}</p>
-      {!books.length && <button className="open-book" onClick={() => input.current?.click()}><Upload size={15}/> ADD YOUR FIRST BOOK <ArrowRight size={15}/></button>}
+      <div className="empty-archive-visual"><span className="empty-spine one"/><span className="empty-spine two"/><span className="empty-feature"><b>BOOK</b></span><span className="empty-spine three"/><span className="empty-spine four"/></div>
+      <h2>{books.length ? 'No books found' : 'No books yet'}</h2>
+      {!books.length && <button className="open-book" onClick={() => input.current?.click()}><Upload size={15}/> ADD BOOK</button>}
     </section>}
 
-    <footer className="shelf-footer"><span>PRIVATE BY DESIGN <i>·</i> STORED ON YOUR SERVER</span><span>{books.length} {books.length === 1 ? 'BOOK' : 'BOOKS'} ON YOUR SHELF</span><span>MADE FOR THE LOVE OF READING</span></footer>
+    
     {reader && <Reader book={reader} onClose={() => { setReader(null); load(); }} onProgress={progress => setBooks(old => old.map(book => book.id === reader.id ? { ...book, progress } : book))}/>}
     {toast && <div className="toast">{toast}</div>}
   </main>;
