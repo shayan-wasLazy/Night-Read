@@ -68,3 +68,8 @@
 .reader-view header button,.reader-view footer button{border:0;background:transparent;color:#333;font-size:10px}
 .reader-view article{width:min(760px,100%);margin:35px auto;flex:1;overflow:auto;white-space:pre-wrap;font:18px/1.85 Georgia,serif}
 @media(max-width:650px){.archive-shell{padding:0;align-items:stretch}.archive-panel{min-height:100vh}.archive-header{height:43px;padding:0 9px}.archive-header-right{gap:9px}.decade-bar{justify-content:flex-start;gap:4px;padding:7px}.decade-bar>button{font-size:7px;padding:4px 5px}.archive-search{margin-left:2px}.archive-search input{width:56px}.archive-gallery{height:40vh;min-height:245px;grid-template-columns:22px minmax(0,1fr) 22px;padding:0 2px}.gallery-track{justify-content:flex-start;gap:9px;padding:15px 8px}.archive-book{width:39px;height:60%}.archive-book.selected{width:118px;height:80%}.archive-details{height:108px;grid-template-columns:28px 1fr 28px;padding:0 6px}.book-information h1{font-size:17px}.book-actions{gap:6px;flex-wrap:wrap}.book-actions button,.book-actions select{font-size:7px}.archive-bottom{padding:0 8px}.modal-body{grid-template-columns:1fr;padding:12px}.cover-picker{height:130px;width:100px;margin:auto}.form-row{gap:6px}.book-modal{max-height:95vh}.reader-view{padding:10px}.reader-view article{font-size:16px;margin:18px auto}}
+
+.novel-file-field{padding:9px 10px;border:1px solid #555;background:#1b1b1b}
+.novel-file-field input{padding:6px 0;border:0;background:transparent;font-size:10px;color:#bbb}
+.novel-file-field input::file-selector-button{background:#333;border:1px solid #666;color:#eee;padding:6px 9px;margin-right:9px;font:9px 'DM Sans',sans-serif;cursor:pointer}
+.novel-file-field small{font-size:9px;letter-spacing:0;color:#999}
