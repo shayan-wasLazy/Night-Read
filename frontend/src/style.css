@@ -141,3 +141,8 @@
  .reader-view .epub-stage{padding:0}
  .reader-view .pdf-stage{padding:65px 8px 95px}
 }
+
+/* Reading typography controls */
+.reader-font-select{max-width:104px;border:0;outline:0;background:transparent;color:var(--reader-pill-ink);font:11px 'DM Sans',sans-serif;padding:5px 2px;cursor:pointer}.reader-font-select option{background:#222;color:#eee}
+.reader-view .epub-book-host{overflow:visible!important}.reader-view .epub-book-host .epub-container{overflow:visible!important}.reader-view .epub-book-host iframe{max-width:100%;border:0!important}
+@media(max-width:650px){.reader-font-select{max-width:75px;font-size:10px}.reader-font-controls{gap:5px;padding:0 5px}}
