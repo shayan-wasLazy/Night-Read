@@ -62,42 +62,45 @@ export default function App() {
   const move = (direction: number) => setSelected(current => Math.max(0, Math.min(filtered.length - 1, current + direction)));
 
   return <main className="library-screen">
-    <header className="library-top">
-      <button className="home-title" onClick={() => { setReader(null); setQuery(''); }}>Library</button>
-      <div className="top-tools">
-        <label className="shelf-search"><Search size={15}/><input value={query} onChange={event => { setQuery(event.target.value); setSelected(0); }} placeholder="Find a book"/></label>
-        <button className="upload-button" onClick={() => input.current?.click()}><Upload size={15}/><span>{uploading ? 'ADDING' : 'ADD BOOK'}</span></button>
-        <input ref={input} type="file" accept=".epub,.pdf,.txt" multiple hidden onChange={upload}/>
-      </div>
+    <header className="archive-header">
+      <button className="archive-back" onClick={() => { setReader(null); setQuery(''); }}>← <span>BACK / LIBRARY</span></button>
+      <div className="archive-heading">NIGHTREAD <small>PERSONAL LIBRARY</small></div>
+      <div className="archive-count">{String(books.length).padStart(2,'0')} BOOKS</div>
     </header>
 
-    <section className="shelf-intro"><h1>Your library</h1></section>
+    <section className="archive-filterbar">
+      <button className="filter-active">ALL</button>
+      <button onClick={() => setSelected(0)}>RECENT</button>
+      <button onClick={() => setQuery('')}>CLEAR SEARCH</button>
+      <label className="archive-search"><Search size={13}/><input value={query} onChange={event => { setQuery(event.target.value); setSelected(0); }} placeholder="SEARCH"/></label>
+      <button className="archive-add" onClick={() => input.current?.click()}><Upload size={13}/> {uploading ? 'ADDING' : 'ADD BOOK'}</button>
+      <input ref={input} type="file" accept=".epub,.pdf,.txt" multiple hidden onChange={upload}/>
+    </section>
 
     {filtered.length ? <>
-      <section className="spine-stage" aria-label="Book shelf carousel">
-        <button className="shelf-arrow" onClick={() => move(-1)} disabled={selected <= 0} aria-label="Previous book"><ArrowLeft size={18}/></button>
-        <div className="spine-track">
-          {filtered.map((book, index) => {
-            const distance = index - selected;
-            return <button key={book.id} className={'spine-card ' + (index === selected ? 'spine-active' : '')} style={{ '--book-color': bookColor(index), '--distance': distance } as CSSProperties} onClick={() => setSelected(index)} title={book.title}>
-              {index === selected ? <span className="cover-face"><span className="cover-kicker">NIGHTREAD LIBRARY</span><span className="cover-art-mark">✳</span><strong>{book.title}</strong><small>{book.author}</small><i>{String(index + 1).padStart(2, '0')}</i></span> : <><span className="spine-title">{book.title}</span><span className="spine-author">{book.author}</span><span className="spine-mark">{String(index + 1).padStart(2, '0')}</span></>}
-            </button>;
-          })}
+      <section className="gallery-stage" aria-label="Book collection">
+        <button className="gallery-arrow" onClick={() => move(-1)} disabled={selected <= 0} aria-label="Previous book"><ArrowLeft size={16}/></button>
+        <div className="gallery-track">
+          {filtered.map((book, index) => <button key={book.id} className={'gallery-book ' + (index === selected ? 'gallery-book-active' : '')} style={{ '--book-color': '#'+['555555','777777','414141','686868','4b4b4b','858585','363636','626262'][index%8] } as CSSProperties} onClick={() => setSelected(index)} title={book.title}>
+            <span className="gallery-cover">
+              <span className="gallery-cover-title">{book.title}</span>
+              <span className="gallery-cover-author">{book.author}</span>
+            </span>
+          </button>)}
         </div>
-        <button className="shelf-arrow" onClick={() => move(1)} disabled={selected >= filtered.length - 1} aria-label="Next book"><ArrowRight size={18}/></button>
+        <button className="gallery-arrow" onClick={() => move(1)} disabled={selected >= filtered.length - 1} aria-label="Next book"><ArrowRight size={16}/></button>
       </section>
-      <section className="selected-book">
-        <h2>{active?.title}</h2><p>{active?.author}</p>
-        <div className="selected-actions"><button className="open-book" onClick={() => active && setReader(active)}><BookOpen size={15}/> {active?.progress ? 'CONTINUE READING' : 'OPEN BOOK'} <ArrowRight size={15}/></button><span>{active?.progress || 0}% READ</span></div>
+      <section className="gallery-caption">
+        <h1>{active?.title}</h1>
+        <p>{active?.author}</p>
+        <span>{active?.format.toUpperCase()} · {active?.progress || 0}% READ</span>
+        <button onClick={() => active && setReader(active)}>OPEN BOOK <ArrowRight size={14}/></button>
       </section>
-    </> : <section className="empty-shelf">
-      <div className="empty-shelf-line"/>
-      <div className="empty-archive-visual"><span className="empty-spine one"/><span className="empty-spine two"/><span className="empty-feature"><b>BOOK</b></span><span className="empty-spine three"/><span className="empty-spine four"/></div>
-      <h2>{books.length ? 'No books found' : 'No books yet'}</h2>
-      {!books.length && <button className="open-book" onClick={() => input.current?.click()}><Upload size={15}/> ADD BOOK</button>}
+    </> : <section className="gallery-empty">
+      <div className="empty-gallery-row"><i/><i/><b>BOOK</b><i/><i/></div>
+      <button className="empty-add" onClick={() => input.current?.click()}><Upload size={14}/> ADD YOUR FIRST BOOK</button>
     </section>}
 
-    
     {reader && <Reader book={reader} onClose={() => { setReader(null); load(); }} onProgress={progress => setBooks(old => old.map(book => book.id === reader.id ? { ...book, progress } : book))}/>}
     {toast && <div className="toast">{toast}</div>}
   </main>;
