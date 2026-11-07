@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, BookOpen, Bookmark, ChevronLeft, ChevronRight, L
 
 type Book = { id: number; title: string; author: string; format: string; filename: string; progress: number; created_at: string };
 const API = '/api';
-const palette = ['#34443c', '#5a3935', '#39465c', '#6a583c', '#4d465d', '#31545a', '#685047', '#3f5140'];
+const palette = ['#5a2928', '#343b50', '#765039', '#43364a', '#6b3435', '#394052', '#66513d', '#493b38'];
 
 function bookColor(index: number) { return palette[index % palette.length]; }
 function splitIntoPages(value: string, chars = 1450) {
@@ -73,9 +73,13 @@ export default function App() {
     </header>
 
     <section className="shelf-intro">
-      <div className="micro-label">YOUR LIBRARY <span>—</span> YOUR OWN LITTLE UNIVERSE</div>
-      <h1>Choose your next <em>world.</em></h1>
-      <p>A shelf of stories, kept close and ready whenever you are.</p>
+      <div className="micro-label">NIGHTREAD ARCHIVE <span>—</span> YOUR PERSONAL COLLECTION</div>
+      <h1>Stories worth <em>keeping.</em></h1>
+      <p>A private shelf for the worlds you return to.</p>
+    </section>
+
+    <section className="archive-filters">
+      <span className="filter-active">ALL / すべて</span><span>RECENTLY ADDED</span><span>IN PROGRESS</span><span>FINISHED</span>
     </section>
 
     {filtered.length ? <>
@@ -85,7 +89,7 @@ export default function App() {
           {filtered.map((book, index) => {
             const distance = index - selected;
             return <button key={book.id} className={'spine-card ' + (index === selected ? 'spine-active' : '')} style={{ '--book-color': bookColor(index), '--distance': distance } as CSSProperties} onClick={() => setSelected(index)} title={book.title}>
-              <span className="spine-title">{book.title}</span><span className="spine-author">{book.author}</span><span className="spine-mark">{String(index + 1).padStart(2, '0')}</span>
+              {index === selected ? <span className="cover-face"><span className="cover-kicker">NIGHTREAD LIBRARY</span><span className="cover-art-mark">✳</span><strong>{book.title}</strong><small>{book.author}</small><i>{String(index + 1).padStart(2, '0')}</i></span> : <><span className="spine-title">{book.title}</span><span className="spine-author">{book.author}</span><span className="spine-mark">{String(index + 1).padStart(2, '0')}</span></>}
             </button>;
           })}
         </div>
@@ -95,14 +99,13 @@ export default function App() {
         <div className="selected-meta"><span>{active?.format.toUpperCase()} EDITION</span><i/><span>{String(selected + 1).padStart(2, '0')} / {String(filtered.length).padStart(2, '0')}</span></div>
         <h2>{active?.title}</h2>
         <p>{active?.author}</p>
-        <div className="book-progress"><span style={{ width: (active?.progress || 0) + '%' }}/></div>
-        <div className="selected-actions"><button className="open-book" onClick={() => active && setReader(active)}><BookOpen size={15}/> {active?.progress ? 'CONTINUE READING' : 'OPEN BOOK'} <ArrowRight size={15}/></button><span>{active?.progress || 0}% read</span></div>
+        <div className="selected-actions"><button className="open-book" onClick={() => active && setReader(active)}><BookOpen size={15}/> {active?.progress ? 'CONTINUE READING' : 'OPEN BOOK'} <ArrowRight size={15}/></button><span>{active?.progress || 0}% READ</span></div>
       </section>
     </> : <section className="empty-shelf">
       <div className="empty-shelf-line"/>
-      <div className="empty-symbol"><BookOpen size={25}/></div>
-      <h2>{books.length ? 'No books found.' : 'A shelf waiting for stories.'}</h2>
-      <p>{books.length ? 'Try another title or author.' : 'Add your first EPUB, PDF or TXT and it will appear here, stored safely on your home server.'}</p>
+      <div className="empty-archive-visual"><span className="empty-spine one"/><span className="empty-spine two"/><span className="empty-feature"><i>✳</i><b>YOUR NEXT<br/>FAVOURITE<br/>STORY</b><small>NIGHTREAD EDITION</small></span><span className="empty-spine three"/><span className="empty-spine four"/></div>
+      <h2>{books.length ? 'No books found.' : 'Your collection begins here.'}</h2>
+      <p>{books.length ? 'Try another title or author.' : 'Import your EPUB, PDF or TXT files. They’ll take their place on this shelf, stored on your own server.'}</p>
       {!books.length && <button className="open-book" onClick={() => input.current?.click()}><Upload size={15}/> ADD YOUR FIRST BOOK <ArrowRight size={15}/></button>}
     </section>}
 
