@@ -52,12 +52,12 @@ function Reader({book,onClose,onProgress}:{book:Book;onClose:()=>void;onProgress
    else if(isEpub){const epubModule:any=await import('epubjs');const makeBook=epubModule.default||epubModule;const epub=makeBook(bytes);epubRef.current=epub;await epub.ready;if(!alive){epub.destroy();return;}
     const nav=await epub.loaded.navigation;const entries:Array<{label:string;href:string}>=[];const flatten=(items:any[])=>items.forEach(item=>{entries.push({label:item.label||'Chapter',href:item.href});if(item.subitems?.length)flatten(item.subitems);});flatten(nav.toc||[]);setChapters(entries);
     if(!epubHost.current)throw Error('Reader surface is unavailable.');
-    const rendition=epub.renderTo(epubHost.current,{width:'100%',height:'100%',flow:'scrolled-doc',manager:'continuous',allowScriptedContent:false});renditionRef.current=rendition;
+    const rendition=epub.renderTo(epubHost.current,{width:'100%',height:'100%',flow:'scrolled-doc',manager:'default',allowScriptedContent:false});renditionRef.current=rendition;
     rendition.themes.register('nightread-light',{body:{'font-family':'Georgia, "Times New Roman", serif','font-size':fontSize+'px','line-height':'1.9','color':'#242424','background':'#f5f3ed','padding':'0 0 120px !important','max-width':'720px','margin':'0 auto','text-align':'left'},'p':{'margin':'0 0 1.35em !important','line-height':'1.9 !important'},'h1,h2,h3':{'font-family':'Georgia, serif','line-height':'1.35','margin':'1.8em 0 .8em'}});
     rendition.themes.register('nightread-dark',{body:{'font-family':'Georgia, "Times New Roman", serif','font-size':fontSize+'px','line-height':'1.9','color':'#e5e2dc','background':'#080808','padding':'0 0 120px !important','max-width':'720px','margin':'0 auto','text-align':'left'},'p':{'margin':'0 0 1.35em !important','line-height':'1.9 !important'},'h1,h2,h3':{'font-family':'Georgia, serif','line-height':'1.35','margin':'1.8em 0 .8em'}});
     rendition.themes.select('nightread-light');
     rendition.on('relocated',(location:any)=>{if(!alive)return;const c=location?.start?.href||'';setChapter(c);const pct=location?.start?.percentage;if(typeof pct==='number'){const n=Math.max(0,Math.min(100,Math.round(pct*100)));setProgress(n);onProgress(n);}});
-    await rendition.display();
+    await Promise.race([rendition.display(),new Promise((_,reject)=>window.setTimeout(()=>reject(new Error('The EPUB took too long to initialise. Try reopening it; if this repeats, the file may contain an unusually large chapter list.')),20000))]);
    }else throw Error('This reader supports EPUB and PDF files.');
   }catch(e){if(alive)setError(e instanceof Error?e.message:'Unable to open book.');}finally{if(alive)setLoading(false);}};
   start();return()=>{alive=false;try{renderTask.current?.cancel();}catch{}try{renditionRef.current?.destroy();}catch{}try{epubRef.current?.destroy();}catch{}try{pdfRef.current?.destroy();}catch{}};
